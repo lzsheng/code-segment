@@ -83,7 +83,38 @@ console.log('personA_Permission', personA_Permission);
 console.log('personB_Permission', personB_Permission);
 // 尝试篡改权限
 try {
-  personB_Permission.permission.del = true;// 注意，由于原型上的permission为对象，是引用类型。如果此操作执行成功，将会影响基于Guest派生的所有实例（但这里由于使用了Object.freeze冻结了对象，所以就不存在这个问题了）
+  personB_Permission.permission.del = true; // 注意，由于原型上的permission为对象，是引用类型。如果此操作执行成功，将会影响基于Guest派生的所有实例（但这里由于使用了Object.freeze冻结了对象，所以就不存在这个问题了）
+  logPermission(personB_Permission);
 } catch (error) {
   console.error(error);
 }
+
+// 猫
+const Cat = {
+  say() {
+    console.log('meow~');
+  },
+  jump() {
+    console.log('jump');
+  },
+};
+
+// 老虎（猫科动物）
+const Tiger = Object.create(Cat, {
+  say: {
+    writable: true,
+    configurable: true,
+    enumerable: true,
+    value: function() {
+      console.log('roar!');
+    },
+  },
+});
+
+const anotherCat = Object.create(Cat);
+
+anotherCat.say();
+
+const anotherTiger = Object.create(Tiger);
+
+anotherTiger.say();

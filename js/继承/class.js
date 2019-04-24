@@ -31,7 +31,7 @@ const logPermission = p => {
 };
 
 // 角色权限表
-const roleList = deepFreeze({
+const roleList = {
   // 管理员
   admin: {
     permission: {
@@ -50,7 +50,7 @@ const roleList = deepFreeze({
       query: true,
     },
   },
-});
+};
 
 class Admin {
   constructor(info) {
@@ -62,8 +62,8 @@ Admin.prototype.permission = deepFreeze({ ...roleList.admin.permission }); // �
 class Guest {
   constructor(info) {
     this.info = info;
-    this.permission = deepFreeze({ ...roleList.guest.permission }); // 在实例的属性中添加(由于permission为对象，是引用类型，如果不做浅拷贝，当permission被修改时，将会影响基于Guest派生的所有实例。当然，在这里由于使用了Object.freeze冻结了对象不能被修改)
   }
+  permission = deepFreeze({ ...roleList.guest.permission }); // 在实例的属性中添加(由于permission为对象，是引用类型，如果不做浅拷贝，当permission被修改时，将会影响基于Guest派生的所有实例。当然，在这里由于使用了Object.freeze冻结了对象不能被修改)
 }
 
 const personA = { name: 'Hazard', age: 18, sex: 'male' };
@@ -74,18 +74,48 @@ const personC = { name: 'Baddie', age: 26, sex: 'male' };
 
 const personA_Permission = new Admin(personA);
 const personB_Permission = new Guest(personB);
-const personC_Permission = new Guest(personC); // 他是一个尝试执行非法操作的用户
+const personC_Permission = new Admin(personC); // 他是一个尝试执行非法操作的用户
 logPermission(personA_Permission);
 logPermission(personB_Permission);
 logPermission(personC_Permission);
 console.log('personA_Permission', personA_Permission);
 console.log('personB_Permission', personB_Permission);
 console.log('personC_Permission', personC_Permission);
+console.warn(personB_Permission.m);
+
 // 尝试篡改权限
 try {
-  personC_Permission.permission = roleList.admin.permission; // 由于Admin的权限在原型上，personC_Permission用户尝试修改自己的实例，从而实现修改权限的目的
+  personC_Permission.permission = roleList.guest.permission; // 由于Admin的权限在原型上，personC_Permission用户尝试修改自己的实例，从而实现修改权限的目的
   logPermission(personC_Permission); // 打印personC_Permission的最新权限
-  personB_Permission.permission.del = true; // 报错
+  personB_Permission.permission.del = true; // 因为对象被冻结，所以会修改失败
+  logPermission(personB_Permission); // 打印personB_Permission的最新权限
 } catch (error) {
   console.error(error);
 }
+
+
+
+// 动物
+class Animal { 
+  constructor(name) {
+    this.name = name;
+  }
+  
+  speak() {
+    console.log(this.name + ' makes a noise.');
+  }
+}
+
+// 汪汪汪
+class Dog extends Animal {
+  constructor(name) {
+    super(name); // call the super class constructor and pass in the name parameter
+  }
+
+  speak() {
+    console.log(this.name + ' barks.');
+  }
+}
+
+let d = new Dog('Mitzie');
+d.speak(); // Mitzie barks.
